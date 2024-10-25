@@ -1,82 +1,111 @@
-const confectionersList = document.querySelector('#confectionersList tbody');
-const confectionerForm = document.getElementById('confectionerForm');
+document.addEventListener('DOMContentLoaded', () => {
+    loadConfectioners();
+    
+    document.getElementById('confectionerForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Предотвращаем отправку формы
+        
+        // Получаем значения из полей ввода
+        const name = document.getElementById('name').value;
+        const source = document.getElementById('source').value;
+        const activity = document.getElementById('activity').value;
+        const telegram = document.getElementById('telegram').value || "Не указан";
+        const instagram = document.getElementById('instagram').value || "Не указан";
+        const phone = document.getElementById('phone').value || "Не указан";
 
-// Загружаем кондитеров из Local Storage при загрузке страницы
-document.addEventListener('DOMContentLoaded', loadConfectioners);
+        // Создаем объект нового кондитера
+        const newConfectioner = {
+            name: name,
+            source: source,
+            activity: activity,
+            telegram: telegram,
+            instagram: instagram,
+            phone: phone,
+            contacted: false
+        };
 
-confectionerForm.addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const newConfectioner = {
-        name: document.getElementById('name').value,
-        source: document.getElementById('source').value,
-        activity: document.getElementById('activity').value,
-        telegram: document.getElementById('telegram').value,
-        instagram: document.getElementById('instagram').value,
-        phone: document.getElementById('phone').value,
-        contacted: false // поле для отслеживания контакта
-    };
-
-    addConfectioner(newConfectioner);
-    confectionerForm.reset(); // Сбрасываем форму
+        // Сохраняем нового кондитера в localStorage
+        saveConfectioner(newConfectioner);
+        updateConfectionersList();
+        document.getElementById('confectionerForm').reset(); // Сбрасываем форму
+    });
 });
 
-// Добавляем кондитера
-function addConfectioner(confectioner) {
-    let confectioners = getConfectioners();
+// Функция сохранения нового кондитера
+function saveConfectioner(confectioner) {
+    const confectioners = loadConfectionersFromLocalStorage();
     confectioners.push(confectioner);
-    saveConfectioners(confectioners);
-    renderConfectioners();
-}
-
-// Получаем список кондитеров из Local Storage
-function getConfectioners() {
-    const confectioners = localStorage.getItem('confectioners');
-    return confectioners ? JSON.parse(confectioners) : [];
-}
-
-// Сохраняем список кондитеров в Local Storage
-function saveConfectioners(confectioners) {
     localStorage.setItem('confectioners', JSON.stringify(confectioners));
 }
 
-// Загружаем кондитеров и отображаем их на странице
+// Функция загрузки кондитеров из localStorage
 function loadConfectioners() {
-    renderConfectioners();
-}
+    const confectioners = loadConfectionersFromLocalStorage();
+    const listContainer = document.getElementById('confectionersList');
+    listContainer.innerHTML = ""; // Очищаем предыдущий список
 
-// Отображаем список кондитеров
-function renderConfectioners() {
-    confectionersList.innerHTML = ''; // очищаем текущий список
-    const confectioners = getConfectioners();
+    if (confectioners.length === 0) {
+        listContainer.innerHTML = "<p>Список кондитеров пуст.</p>";
+        return;
+    }
+
+    const table = document.createElement('table');
+    table.classList.add('table');
+    const header = `
+        <tr>
+            <th>Имя</th>
+            <th>Источник</th>
+            <th>Деятельность</th>
+            <th>Telegram</th>
+            <th>Instagram</th>
+            <th>Номер</th>
+            <th>Связались</th>
+            <th>Удалить</th>
+        </tr>
+    `;
+    table.innerHTML = header;
+
     confectioners.forEach((confectioner, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+        const row = document.createElement('tr');
+        row.innerHTML = `
             <td>${confectioner.name}</td>
             <td>${confectioner.source}</td>
             <td>${confectioner.activity}</td>
             <td>${confectioner.telegram}</td>
             <td>${confectioner.instagram}</td>
             <td>${confectioner.phone}</td>
-            <td><button onclick="toggleContacted(${index})">${confectioner.contacted ? 'Связались' : 'Не связались'}</button></td>
-            <td><button onclick="deleteConfectioner(${index})">Удалить</button></td> <!-- Кнопка для удаления -->
+            <td>
+                <button class="action-button contacted-button" onclick="toggleContacted(${index})">
+                    ${confectioner.contacted ? 'Да' : 'Нет'}
+                </button>
+            </td>
+            <td>
+                <button class="action-button delete-button" onclick="deleteConfectioner(${index})">Удалить</button>
+            </td>
         `;
-        confectionersList.appendChild(tr);
+        table.appendChild(row);
     });
+
+    listContainer.appendChild(table);
 }
 
-// Меняем статус контакта
-function toggleContacted(index) {
-    let confectioners = getConfectioners();
-    confectioners[index].contacted = !confectioners[index].contacted;
-    saveConfectioners(confectioners);
-    renderConfectioners();
+// Функция загрузки кондитеров из localStorage
+function loadConfectionersFromLocalStorage() {
+    const confectionersJSON = localStorage.getItem('confectioners');
+    return confectionersJSON ? JSON.parse(confectionersJSON) : [];
 }
 
-// Удаляем кондитера
+// Функция удаления кондитера
 function deleteConfectioner(index) {
-    let confectioners = getConfectioners();
-    confectioners.splice(index, 1); // Удаляем кондитера из массива
-    saveConfectioners(confectioners); // Сохраняем обновленный список
-    renderConfectioners(); // Перерисовываем список
+    const confectioners = loadConfectionersFromLocalStorage();
+    confectioners.splice(index, 1); // Удаляем кондитера
+    localStorage.setItem('confectioners', JSON.stringify(confectioners));
+    loadConfectioners(); // Обновляем список
+}
+
+// Функция переключения статуса "Связались"
+function toggleContacted(index) {
+    const confectioners = loadConfectionersFromLocalStorage();
+    confectioners[index].contacted = !confectioners[index].contacted; // Переключаем статус
+    localStorage.setItem('confectioners', JSON.stringify(confectioners));
+    loadConfectioners(); // Обновляем список
 }

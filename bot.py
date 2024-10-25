@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
 
-API_TOKEN = '7941922638:AAEMXSotBZbct2EpT1kJ-V4YqNr9YD8tuH8'
+API_TOKEN = '7941922638:AAEMXSotBZbct2EpT1kJ-V4YqNr9YD8tuH8'  # Замените на ваш токен
 
 # Включаем логирование
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +31,7 @@ async def start_command(message: types.Message):
 async def open_site(message: types.Message):
     await message.reply("Открываю сайт кондитеров...", disable_web_page_preview=True)
     keyboard = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton("Перейти на сайт", url="https://adminkacheeff.netlify.app/")  # Укажите ваш URL
+    button = types.InlineKeyboardButton("Перейти на сайт", url="https://adminkaxsvpp.netlify.app/")  # Укажите ваш URL
     keyboard.add(button)
     await message.answer("Нажмите на кнопку ниже, чтобы перейти на сайт:", reply_markup=keyboard)
 
@@ -39,7 +39,7 @@ async def open_site(message: types.Message):
 @dp.message_handler(commands=['add_confectioner'])
 async def add_confectioner(message: types.Message):
     parts = message.text.split()[1:]  # Получаем все части команды
-    if len(parts) != 6:
+    if len(parts) < 6:
         await message.reply("Используйте формат: /add_confectioner имя источник деятельность телеграм инстаграм номер")
         return
     
@@ -47,9 +47,9 @@ async def add_confectioner(message: types.Message):
         "name": parts[0],
         "source": parts[1],
         "activity": parts[2],
-        "telegram": parts[3],
-        "instagram": parts[4],
-        "phone": parts[5],
+        "telegram": parts[3] if parts[3] != "Не указан" else "Не указан",
+        "instagram": parts[4] if parts[4] != "Не указан" else "Не указан",
+        "phone": parts[5] if parts[5] != "Не указан" else "Не указан",
         "contacted": False  # по умолчанию не связались
     }
 
